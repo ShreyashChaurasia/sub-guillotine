@@ -76,3 +76,20 @@ coverage.xml
 
 # mypy
 .mypy_cache/
+
+# Sub Guillotine — Project Specific
+# SQLite database files
+*.db
+*.db-journal
+*.db-wal
+
+# Cancellation proof screenshots (generated at runtime)
+screenshots/
+
+# Playwright browser state
+playwright-state/
+
+# Keep .env.example tracked (override *.env rule)
+!.env.example
+
+docs

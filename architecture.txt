@@ -1,0 +1,266 @@
+%% ============================================================
+%% SUB GUILLOTINE — ARCHITECTURE DIAGRAMS (Mermaid)
+%% Import into Excalidraw via Mermaid-to-Excalidraw plugin
+%% ============================================================
+
+
+%% ============================================================
+%% DIAGRAM 1: HIGH-LEVEL SYSTEM ARCHITECTURE
+%% ============================================================
+
+graph TB
+    subgraph INPUT["📧 Email Ingestion Layer"]
+        EMAIL_MOCK["Mock Inbox<br/>(sample_emails.json)"]
+        EMAIL_IMAP["IMAP / Gmail API<br/>(Future)"]
+    end
+
+    subgraph BEDROCK["☁️ Amazon Bedrock"]
+        MODEL["Foundation Model<br/>Claude 3.5 Sonnet / Nova Pro"]
+    end
+
+    subgraph AGENT_CORE["🤖 Strands Agent Core"]
+        AGENT["Strands Agent<br/>(Orchestrator)"]
+        PROMPT["System Prompt<br/>(Safety Constraints)"]
+        AGENT --- PROMPT
+    end
+
+    subgraph TOOLBELT["🔧 Strands Tool Belt (@tool)"]
+        T1["extract_subscription<br/>_from_email"]
+        T2["check_imminent<br/>_deadlines"]
+        T3["stage_cancellation"]
+        T4["dispatch_hitl<br/>_decision"]
+        T5["commit_cancellation"]
+    end
+
+    subgraph DATA["💾 Data Layer"]
+        SQLITE["SQLite Ledger<br/>(subscriptions table)"]
+    end
+
+    subgraph BROWSER["🌐 Browser Automation"]
+        PLAYWRIGHT["Playwright<br/>(Headless Chromium)"]
+        SCREENSHOTS["📸 Screenshot<br/>Capture Engine"]
+    end
+
+    subgraph MOCK_PORTAL["🎭 Mock SaaS Portal (FastAPI)"]
+        LOGIN["/login"]
+        DASHBOARD["/dashboard"]
+        BILLING["/billing"]
+        SURVEY["/cancel-survey"]
+        RETENTION["50% Off Retention<br/>Dark Pattern"]
+        FINAL["/final-cancel"]
+        SUCCESS["✅ Cancelled"]
+
+        LOGIN --> DASHBOARD --> BILLING --> SURVEY --> RETENTION --> FINAL --> SUCCESS
+    end
+
+    subgraph HITL["👤 Human-in-the-Loop Gate"]
+        CLI["💻 CLI Prompt<br/>(Rich Terminal)"]
+        TELEGRAM["📱 Telegram Bot<br/>(Inline Keyboard)"]
+    end
+
+    subgraph OUTPUT["📊 Output"]
+        PROOF["Cancellation Proof<br/>(Timestamped PNG)"]
+        SAVINGS["💰 Money Saved<br/>Report"]
+    end
+
+    %% Connections
+    EMAIL_MOCK --> T1
+    EMAIL_IMAP -.-> T1
+
+    AGENT <--> MODEL
+    AGENT --> T1
+    AGENT --> T2
+    AGENT --> T3
+    AGENT --> T4
+    AGENT --> T5
+
+    T1 --> SQLITE
+    T2 --> SQLITE
+    T3 --> PLAYWRIGHT
+    T5 --> PLAYWRIGHT
+
+    PLAYWRIGHT --> MOCK_PORTAL
+    PLAYWRIGHT --> SCREENSHOTS
+
+    T4 --> CLI
+    T4 --> TELEGRAM
+
+    CLI --> AGENT
+    TELEGRAM --> AGENT
+
+    T5 --> SQLITE
+    SCREENSHOTS --> PROOF
+    T5 --> SAVINGS
+
+    %% Styling
+    classDef aws fill:#FF9900,stroke:#232F3E,color:#232F3E,font-weight:bold
+    classDef agent fill:#4A90D9,stroke:#2C5F8A,color:white,font-weight:bold
+    classDef tool fill:#6C5CE7,stroke:#4834A8,color:white
+    classDef data fill:#00B894,stroke:#008C6E,color:white
+    classDef browser fill:#E17055,stroke:#B34332,color:white
+    classDef hitl fill:#FDCB6E,stroke:#D4A843,color:#2D3436,font-weight:bold
+    classDef output fill:#55EFC4,stroke:#33C999,color:#2D3436
+
+    class MODEL aws
+    class AGENT,PROMPT agent
+    class T1,T2,T3,T4,T5 tool
+    class SQLITE data
+    class PLAYWRIGHT,SCREENSHOTS browser
+    class CLI,TELEGRAM hitl
+    class PROOF,SAVINGS output
+
+
+%% ============================================================
+%% DIAGRAM 2: AGENT EXECUTION PIPELINE (Left-to-Right Flow)
+%% ============================================================
+
+graph LR
+    subgraph PHASE1["Phase 1: SCAN"]
+        A1["📧 Ingest Emails"] --> A2["🧠 Bedrock LLM<br/>Extract Fields"] --> A3["💾 Store in<br/>SQLite Ledger"]
+    end
+
+    subgraph PHASE2["Phase 2: DETECT"]
+        B1["⏰ Check Deadlines<br/>(T-24h threshold)"] --> B2{"Imminent<br/>Renewals?"}
+    end
+
+    subgraph PHASE3["Phase 3: STAGE"]
+        C1["🌐 Launch<br/>Headless Browser"] --> C2["🚪 Login &<br/>Navigate"] --> C3["🛡️ Bypass<br/>Retention"] --> C4["📸 Screenshot<br/>Pre-Cancel State"]
+    end
+
+    subgraph PHASE4["Phase 4: ASK"]
+        D1["📨 Send HITL<br/>Notification"] --> D2{"User<br/>Decision"}
+    end
+
+    subgraph PHASE5A["Phase 5a: EXECUTE"]
+        E1["🖱️ Click Confirm"] --> E2["📸 Proof Screenshot"] --> E3["✅ Update Ledger<br/>→ CANCELLED"]
+    end
+
+    subgraph PHASE5B["Phase 5b: STAND DOWN"]
+        F1["📋 Update Ledger<br/>→ KEPT"]
+    end
+
+    A3 --> B1
+    B2 -- "Yes" --> C1
+    B2 -- "No" --> B1
+    C4 --> D1
+    D2 -- "CANCEL" --> E1
+    D2 -- "KEEP" --> F1
+
+    classDef phase1 fill:#74B9FF,stroke:#3498DB,color:#2D3436
+    classDef phase2 fill:#A29BFE,stroke:#6C5CE7,color:white
+    classDef phase3 fill:#FF7675,stroke:#D63031,color:white
+    classDef phase4 fill:#FFEAA7,stroke:#FDCB6E,color:#2D3436
+    classDef phase5a fill:#55EFC4,stroke:#00B894,color:#2D3436
+    classDef phase5b fill:#DFE6E9,stroke:#B2BEC3,color:#2D3436
+
+    class A1,A2,A3 phase1
+    class B1,B2 phase2
+    class C1,C2,C3,C4 phase3
+    class D1,D2 phase4
+    class E1,E2,E3 phase5a
+    class F1 phase5b
+
+
+%% ============================================================
+%% DIAGRAM 3: DATA MODEL & STATE MACHINE
+%% ============================================================
+
+stateDiagram-v2
+    [*] --> MONITORING: Email parsed & stored
+
+    MONITORING --> MONITORING: No deadline imminent
+    MONITORING --> STAGED_FOR_CANCEL: T-24h threshold hit<br/>Browser staged
+
+    STAGED_FOR_CANCEL --> CANCELLED: Human approved<br/>"CANCEL"
+    STAGED_FOR_CANCEL --> KEPT: Human declined<br/>"KEEP"
+
+    CANCELLED --> [*]: Proof saved ✅
+    KEPT --> [*]: Standing down 🛑
+
+
+%% ============================================================
+%% DIAGRAM 4: TECH STACK LAYERS
+%% ============================================================
+
+graph TB
+    subgraph PRESENTATION["Presentation Layer"]
+        RICH["Rich CLI<br/>Terminal UI"]
+        TG_BOT["Telegram Bot<br/>Notifications"]
+    end
+
+    subgraph APPLICATION["Application Layer"]
+        STRANDS["Strands Agent<br/>(Orchestrator)"]
+    end
+
+    subgraph TOOLS_LAYER["Tools Layer"]
+        TOOL_EMAIL["email_extractor<br/>@tool"]
+        TOOL_DEADLINE["deadline_tracker<br/>@tool"]
+        TOOL_BROWSER["browser_canceler<br/>@tool"]
+        TOOL_HITL["hitl_notifier<br/>@tool"]
+    end
+
+    subgraph INTEGRATION["Integration Layer"]
+        PW["Playwright<br/>Headless Chromium"]
+        BEDROCK_API["Amazon Bedrock<br/>Converse API"]
+    end
+
+    subgraph PERSISTENCE["Persistence Layer"]
+        DB["SQLite<br/>(sub_guillotine.db)"]
+        FS["File System<br/>(screenshots/)"]
+    end
+
+    subgraph EXTERNAL["External Services"]
+        MOCK_SVC["Mock SaaS Portal<br/>(localhost:8888)"]
+        AWS["AWS Bedrock<br/>(us-east-1)"]
+    end
+
+    PRESENTATION --> APPLICATION
+    APPLICATION --> TOOLS_LAYER
+    TOOLS_LAYER --> INTEGRATION
+    TOOLS_LAYER --> PERSISTENCE
+    INTEGRATION --> EXTERNAL
+
+    classDef pres fill:#74B9FF,stroke:#3498DB,color:#2D3436
+    classDef app fill:#6C5CE7,stroke:#4834A8,color:white,font-weight:bold
+    classDef tools fill:#A29BFE,stroke:#6C5CE7,color:white
+    classDef integ fill:#FF9900,stroke:#E68A00,color:#232F3E,font-weight:bold
+    classDef persist fill:#00B894,stroke:#008C6E,color:white
+    classDef ext fill:#636E72,stroke:#2D3436,color:white
+
+    class RICH,TG_BOT pres
+    class STRANDS app
+    class TOOL_EMAIL,TOOL_DEADLINE,TOOL_BROWSER,TOOL_HITL tools
+    class PW,BEDROCK_API integ
+    class DB,FS persist
+    class MOCK_SVC,AWS ext
+
+
+%% ============================================================
+%% DIAGRAM 5: MOCK SAAS PORTAL — DARK PATTERN FLOW
+%% ============================================================
+
+graph TD
+    START(("User/Agent<br/>Visits Portal")) --> LOGIN["🔐 Login Page<br/>POST /login"]
+    LOGIN --> DASH["📊 Dashboard<br/>GET /dashboard"]
+    DASH --> BILLING["💳 Billing Page<br/>GET /billing"]
+    BILLING --> SURVEY["📝 Cancel Survey<br/>'Why are you leaving?'"]
+    SURVEY --> RETENTION["🎁 Retention Offer<br/>'Stay for 50% off!'<br/>Dark Pattern #1"]
+    RETENTION --> COUNTDOWN["⏳ Fake Loading<br/>'Processing...'<br/>Dark Pattern #2"]
+    COUNTDOWN --> FINAL["⚠️ Final Confirm<br/>'Are you REALLY sure?'<br/>Dark Pattern #3"]
+
+    FINAL --> |"Agent STAGES here<br/>📸 Screenshot"| STAGED(("⏸️ STAGED<br/>Awaiting Human"))
+
+    STAGED --> |"Human: CANCEL"| CONFIRM["✅ Confirm Click<br/>POST /final-cancel"]
+    STAGED --> |"Human: KEEP"| ABORT["🛑 Abort<br/>No action taken"]
+
+    CONFIRM --> SUCCESS["🎉 Success Page<br/>'Subscription Cancelled'<br/>📸 Proof Screenshot"]
+
+    classDef dark fill:#D63031,stroke:#C0392B,color:white,font-weight:bold
+    classDef safe fill:#00B894,stroke:#008C6E,color:white,font-weight:bold
+    classDef wait fill:#FDCB6E,stroke:#D4A843,color:#2D3436,font-weight:bold
+    classDef normal fill:#74B9FF,stroke:#3498DB,color:#2D3436
+
+    class RETENTION,COUNTDOWN,FINAL dark
+    class SUCCESS,CONFIRM safe
+    class STAGED wait
+    class LOGIN,DASH,BILLING,SURVEY normal
