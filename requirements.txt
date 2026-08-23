@@ -1,0 +1,25 @@
+# AWS & Bedrock
+boto3>=1.34.0
+botocore>=1.34.0
+
+# Data Validation & Config
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# Web & Mock Services
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+jinja2>=3.1.2
+httpx>=0.27.0
+
+# Terminal UI
+rich>=13.7.0
+
+# Browser Automation
+playwright>=1.40.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+python-multipart>=0.0.9

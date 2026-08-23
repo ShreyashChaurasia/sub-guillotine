@@ -1,0 +1,47 @@
+[
+  {
+    "id": "email_001",
+    "sender": "billing@saaspro-analytics.io",
+    "recipient": "alex.chen@example.com",
+    "subject": "Upcoming Renewal Notice: SaaSPro Analytics Pro Tier",
+    "date": "2026-08-23T08:00:00Z",
+    "body_text": "Hi Alex,\n\nThis is a friendly reminder that your monthly subscription to SaaSPro Analytics Pro Tier ($29.00/month) will automatically renew on August 24, 2026 at 09:00 UTC.\n\nYour payment method ending in 4242 will be charged $29.00.\n\nIf you wish to make changes or cancel your subscription prior to renewal, please visit your account billing portal: http://localhost:8888/billing\n\nThanks,\nThe SaaSPro Team",
+    "body_html": "<p>Hi Alex,</p><p>This is a friendly reminder that your monthly subscription to <strong>SaaSPro Analytics Pro Tier</strong> (<strong>$29.00/month</strong>) will automatically renew on <strong>August 24, 2026 at 09:00 UTC</strong>.</p><p>To manage or cancel your subscription, visit: <a href='http://localhost:8888/billing'>http://localhost:8888/billing</a></p>"
+  },
+  {
+    "id": "email_002",
+    "sender": "no-reply@creativecloud.adobe.mock",
+    "recipient": "alex.chen@example.com",
+    "subject": "Your Adobe Creative Cloud All Apps subscription is renewing soon",
+    "date": "2026-08-22T14:30:00Z",
+    "body_text": "Dear Alex Chen,\n\nYour annual subscription for Adobe Creative Cloud All Apps will renew on August 28, 2026. The renewal amount is $54.99 USD.\n\nYou can manage your plan or cancel anytime by visiting: https://account.adobe.com/plans/cancel\n\nAdobe Customer Support",
+    "body_html": "<p>Dear Alex Chen,</p><p>Your annual subscription for <strong>Adobe Creative Cloud All Apps</strong> will renew on <strong>August 28, 2026</strong> for <strong>$54.99 USD</strong>.</p><p><a href='https://account.adobe.com/plans/cancel'>Manage Plan / Cancel</a></p>"
+  },
+  {
+    "id": "email_003",
+    "sender": "info@mailer.netflix.mock",
+    "recipient": "alex.chen@example.com",
+    "subject": "Upcoming billing statement for your Netflix Standard Plan",
+    "date": "2026-08-20T10:00:00Z",
+    "body_text": "Hi Alex,\n\nWe are getting in touch to let you know your Netflix Standard Plan will renew on September 2, 2026. You will be billed $15.49 on your card.\n\nTo cancel or change plan details, go to https://www.netflix.com/youraccount/cancel",
+    "body_html": "<p>Hi Alex,</p><p>Your <strong>Netflix Standard Plan</strong> will renew on <strong>September 2, 2026</strong> ($15.49).</p><p><a href='https://www.netflix.com/youraccount/cancel'>Cancel Subscription</a></p>"
+  },
+  {
+    "id": "email_004",
+    "sender": "notifications@cloudvault-storage.mock",
+    "recipient": "alex.chen@example.com",
+    "subject": "CloudVault 2TB Storage Plan Renewal Reminder",
+    "date": "2026-08-23T04:15:00Z",
+    "body_text": "Attention Alex,\n\nYour CloudVault 2TB Storage Plan ($9.99/mo) is scheduled to renew on August 23, 2026 at 20:00 UTC.\n\nTo avoid being charged, manage or cancel your subscription at: https://cloudvault.mock/account/billing/cancel",
+    "body_html": "<p>Attention Alex,</p><p>Your <strong>CloudVault 2TB Storage Plan</strong> ($9.99/mo) will renew on <strong>August 23, 2026 at 20:00 UTC</strong>.</p><p><a href='https://cloudvault.mock/account/billing/cancel'>Cancel Plan</a></p>"
+  },
+  {
+    "id": "email_005",
+    "sender": "billing@gympass-fit.mock",
+    "recipient": "alex.chen@example.com",
+    "subject": "GymPass Premium Monthly Membership Auto-Renewal",
+    "date": "2026-08-15T09:00:00Z",
+    "body_text": "Hello Alex,\n\nYour GymPass Premium Monthly Membership ($79.00 USD) will renew on September 15, 2026.\n\nManage your membership at https://gympass.mock/memberships/cancel",
+    "body_html": "<p>Hello Alex,</p><p>Your <strong>GymPass Premium</strong> ($79.00 USD) renews on <strong>September 15, 2026</strong>.</p>"
+  }
+]

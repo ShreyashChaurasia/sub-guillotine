@@ -1,6 +1,5 @@
 %% ============================================================
 %% SUB GUILLOTINE — ARCHITECTURE DIAGRAMS (Mermaid)
-%% Import into Excalidraw via Mermaid-to-Excalidraw plugin
 %% ============================================================
 
 

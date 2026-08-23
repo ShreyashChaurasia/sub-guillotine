@@ -92,4 +92,5 @@ playwright-state/
 # Keep .env.example tracked (override *.env rule)
 !.env.example
 
-docs
+# Developer Docs
+docs/
