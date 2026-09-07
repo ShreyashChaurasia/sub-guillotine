@@ -2,7 +2,9 @@
 
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Optional
+import httpx
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -14,6 +16,51 @@ from src.storage.database import get_db
 
 logger = logging.getLogger(__name__)
 console = Console()
+
+
+def _send_telegram_notification(
+    bot_token: str,
+    chat_id: str,
+    subscription_id: int,
+    service_name: str,
+    amount: float,
+    currency: str,
+    hours_remaining: float,
+    staged_screenshot_path: Optional[str] = None,
+) -> bool:
+    """Send HITL alert notification and optional staged screenshot to Telegram."""
+    try:
+        base_url = f"https://api.telegram.org/bot{bot_token}"
+        caption = (
+            f"[ALERT] Human-in-the-Loop Approval Required\n\n"
+            f"Subscription #{subscription_id}: {service_name}\n"
+            f"Cost: ${amount:.2f} {currency}\n"
+            f"Time to Renewal: {hours_remaining:.1f} hours remaining\n"
+            f"Staged at final confirmation gate.\n\n"
+            f"Reply CANCEL to execute guillotine or KEEP to stand down."
+        )
+
+        # If screenshot exists, send photo
+        if staged_screenshot_path and Path(staged_screenshot_path).exists():
+            with open(staged_screenshot_path, "rb") as photo_file:
+                resp = httpx.post(
+                    f"{base_url}/sendPhoto",
+                    data={"chat_id": chat_id, "caption": caption},
+                    files={"photo": photo_file},
+                    timeout=10.0,
+                )
+                return resp.status_code == 200
+
+        # Otherwise send text message
+        resp = httpx.post(
+            f"{base_url}/sendMessage",
+            json={"chat_id": chat_id, "text": caption},
+            timeout=10.0,
+        )
+        return resp.status_code == 200
+    except Exception as exc:
+        logger.warning(f"Failed to send Telegram notification: {exc}")
+        return False
 
 
 def dispatch_hitl_decision(
@@ -28,11 +75,24 @@ def dispatch_hitl_decision(
     db_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Strands Tool: Dispatches a Human-in-the-Loop approval prompt via Rich CLI or Telegram bot.
+    Strands Tool: Dispatches a Human-in-the-Loop approval prompt via Rich CLI and Telegram bot.
     Blocks until human operator decides whether to EXECUTE (Cancel) or STAND DOWN (Keep).
     """
     settings = get_settings()
     db = get_db(db_path)
+
+    # Optional Telegram notification dispatch
+    if settings.telegram_bot_token and settings.telegram_chat_id:
+        _send_telegram_notification(
+            bot_token=settings.telegram_bot_token,
+            chat_id=settings.telegram_chat_id,
+            subscription_id=subscription_id,
+            service_name=service_name,
+            amount=amount,
+            currency=currency,
+            hours_remaining=hours_remaining,
+            staged_screenshot_path=staged_screenshot_path,
+        )
 
     # Render Rich Decision Card
     table = Table(show_header=False, box=None, padding=(0, 1))

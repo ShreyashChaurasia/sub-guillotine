@@ -94,3 +94,6 @@ playwright-state/
 
 # Developer Docs
 docs/
+
+# Local agent instructions
+GEMINI.md

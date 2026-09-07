@@ -1,9 +1,10 @@
 """SQLite storage and ledger management for Sub Guillotine."""
 
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import List, Optional
+from typing import Generator, List, Optional
 
 from src.config import get_settings
 from src.models.schema import (
@@ -27,12 +28,16 @@ class Database:
         if db_file.parent and str(db_file.parent) != ".":
             db_file.parent.mkdir(parents=True, exist_ok=True)
 
-    def _get_connection(self) -> sqlite3.Connection:
-        """Create a sqlite3 connection with Row factory enabled."""
+    @contextmanager
+    def _get_connection(self) -> Generator[sqlite3.Connection, None, None]:
+        """Context manager for sqlite3 connection ensuring automatic commit and close."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
-        return conn
+        try:
+            yield conn
+        finally:
+            conn.close()
 
     def init_db(self) -> None:
         """Create database tables and indices if they do not exist."""
@@ -170,7 +175,6 @@ class Database:
             if sub_renewal.tzinfo is None:
                 sub_renewal = sub_renewal.replace(tzinfo=timezone.utc)
 
-            # Check if renewal is upcoming within threshold (between now and deadline)
             if ref_time <= sub_renewal <= deadline_limit:
                 diff_seconds = (sub_renewal - ref_time).total_seconds()
                 hours_remaining = max(0.0, diff_seconds / 3600.0)

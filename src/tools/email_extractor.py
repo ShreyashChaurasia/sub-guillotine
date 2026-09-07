@@ -3,8 +3,11 @@
 import json
 import logging
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+
+from botocore.exceptions import ClientError
 
 from src.config import get_bedrock_client, get_settings
 from src.models.schema import ExtractedSubscriptionData
@@ -64,7 +67,6 @@ def _heuristic_fallback_extractor(email_text: str, email_subject: str = "") -> E
     elif "gympass" in content.lower():
         service_name = "GymPass"
     elif email_subject:
-        # Fallback to subject snippet
         service_name = email_subject.split(":")[0].strip()
 
     # Plan name
@@ -103,47 +105,61 @@ def _heuristic_fallback_extractor(email_text: str, email_subject: str = "") -> E
     )
 
 
-def extract_subscription_from_email(email_content: str, email_subject: str = "") -> Dict[str, Any]:
+def extract_subscription_from_email(
+    email_content: str,
+    email_subject: str = "",
+    max_retries: int = 2,
+) -> Dict[str, Any]:
     """
     Strands Tool: Extracts structured subscription items from incoming raw email text or HTML.
-    Uses Amazon Bedrock with automated heuristic fallback.
+    Uses Amazon Bedrock with retry backoff and automated heuristic fallback.
     """
     global _bedrock_warning_logged
     settings = get_settings()
 
-    # Try Bedrock invocation if credentials are configured
     if settings.aws_access_key_id and settings.aws_secret_access_key:
-        try:
-            client = get_bedrock_client(settings)
-            prompt = f"Subject: {email_subject}\n\nEmail Body:\n{email_content}"
+        prompt = f"Subject: {email_subject}\n\nEmail Body:\n{email_content}"
+        client = get_bedrock_client(settings)
 
-            response = client.converse(
-                modelId=settings.bedrock_model_id,
-                system=[{"text": SYSTEM_PROMPT}],
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [{"text": f"Extract subscription data from this email:\n{prompt}"}],
-                    }
-                ],
-                inferenceConfig={"temperature": 0.0, "maxTokens": 1000},
-            )
-
-            output_text = response["output"]["message"]["content"][0]["text"].strip()
-            if output_text.startswith("```"):
-                output_text = re.sub(r"^```(?:json)?\s*", "", output_text)
-                output_text = re.sub(r"\s*```$", "", output_text)
-
-            parsed_json = json.loads(output_text)
-            extracted = ExtractedSubscriptionData(**parsed_json)
-            logger.info(f"Successfully extracted {extracted.service_name} via Bedrock.")
-            return extracted.model_dump(mode="json")
-        except Exception as exc:
-            if not _bedrock_warning_logged:
-                logger.warning(
-                    f"Bedrock invocation failed ({exc}). Using heuristic fallback extractor."
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = client.converse(
+                    modelId=settings.bedrock_model_id,
+                    system=[{"text": SYSTEM_PROMPT}],
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [{"text": f"Extract subscription data from this email:\n{prompt}"}],
+                        }
+                    ],
+                    inferenceConfig={"temperature": 0.0, "maxTokens": 1000},
                 )
-                _bedrock_warning_logged = True
+
+                output_text = response["output"]["message"]["content"][0]["text"].strip()
+                if output_text.startswith("```"):
+                    output_text = re.sub(r"^```(?:json)?\s*", "", output_text)
+                    output_text = re.sub(r"\s*```$", "", output_text)
+
+                parsed_json = json.loads(output_text)
+                extracted = ExtractedSubscriptionData(**parsed_json)
+                logger.info(f"Successfully extracted {extracted.service_name} via Bedrock.")
+                return extracted.model_dump(mode="json")
+
+            except ClientError as ce:
+                error_code = ce.response.get("Error", {}).get("Code", "")
+                if error_code in ["ThrottlingException", "RequestLimitExceeded"] and attempt < max_retries:
+                    time.sleep(1.0 * attempt)
+                    continue
+                if not _bedrock_warning_logged:
+                    logger.warning(f"Bedrock invocation failed ({ce}). Using heuristic fallback extractor.")
+                    _bedrock_warning_logged = True
+                break
+
+            except Exception as exc:
+                if not _bedrock_warning_logged:
+                    logger.warning(f"Bedrock invocation failed ({exc}). Using heuristic fallback extractor.")
+                    _bedrock_warning_logged = True
+                break
 
     # Fallback path
     extracted = _heuristic_fallback_extractor(email_content, email_subject)
