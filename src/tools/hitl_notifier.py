@@ -50,7 +50,7 @@ def dispatch_hitl_decision(
 
     panel = Panel(
         table,
-        title="[bold red]⚠️ HUMAN-IN-THE-LOOP APPROVAL REQUIRED[/bold red]",
+        title="[bold red][ALERT] HUMAN-IN-THE-LOOP APPROVAL REQUIRED[/bold red]",
         subtitle="[dim]Sub Guillotine Agent is staged and awaiting your command[/dim]",
         border_style="red" if hours_remaining <= 6.0 else "yellow",
         expand=False,
@@ -61,7 +61,6 @@ def dispatch_hitl_decision(
     decision_value: HITLDecisionType
 
     if auto_decision:
-        # Programmatic or non-interactive mock test mode
         normalized = auto_decision.strip().upper()
         if normalized in ["CANCEL", "C", "YES"]:
             decision_value = HITLDecisionType.CANCEL
@@ -70,10 +69,8 @@ def dispatch_hitl_decision(
         else:
             decision_value = HITLDecisionType.DEFER
     elif not interactive:
-        # Default non-interactive choice
         decision_value = HITLDecisionType.CANCEL
     else:
-        # Interactive CLI prompt
         choice = Prompt.ask(
             "\n[bold green][C][/bold green]ancel (Execute Guillotine) / [bold yellow][K][/bold yellow]eep (Stand Down)",
             choices=["c", "C", "k", "K", "cancel", "keep"],
@@ -87,9 +84,9 @@ def dispatch_hitl_decision(
     # If decision is KEEP, update state to KEPT
     if decision_value == HITLDecisionType.KEEP:
         db.update_status(sub_id=subscription_id, status=SubscriptionStatus.KEPT)
-        console.print(f"[bold yellow]🛑 Stood down. Subscription #{subscription_id} ({service_name}) marked as KEPT.[/bold yellow]\n")
+        console.print(f"[bold yellow][STAND DOWN] Subscription #{subscription_id} ({service_name}) marked as KEPT.[/bold yellow]\n")
     elif decision_value == HITLDecisionType.CANCEL:
-        console.print(f"[bold green]⚡ Authorization GRANTED. Executing cancellation for #{subscription_id} ({service_name})...[/bold green]\n")
+        console.print(f"[bold green][APPROVED] Executing cancellation for #{subscription_id} ({service_name})...[/bold green]\n")
 
     decision_obj = HITLDecision(
         decision=decision_value,

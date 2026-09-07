@@ -28,6 +28,8 @@ Extract the following fields strictly as a valid JSON object matching this schem
 Only output the raw JSON object without markdown formatting or code fences.
 """
 
+_bedrock_warning_logged = False
+
 
 def _heuristic_fallback_extractor(email_text: str, email_subject: str = "") -> ExtractedSubscriptionData:
     """Fallback extractor using regex when Bedrock client is offline or credentials not yet provided."""
@@ -104,8 +106,9 @@ def _heuristic_fallback_extractor(email_text: str, email_subject: str = "") -> E
 def extract_subscription_from_email(email_content: str, email_subject: str = "") -> Dict[str, Any]:
     """
     Strands Tool: Extracts structured subscription items from incoming raw email text or HTML.
-    Uses Amazon Bedrock (Claude 3.5 Sonnet / Nova Pro) with automated fallback.
+    Uses Amazon Bedrock with automated heuristic fallback.
     """
+    global _bedrock_warning_logged
     settings = get_settings()
 
     # Try Bedrock invocation if credentials are configured
@@ -114,7 +117,6 @@ def extract_subscription_from_email(email_content: str, email_subject: str = "")
             client = get_bedrock_client(settings)
             prompt = f"Subject: {email_subject}\n\nEmail Body:\n{email_content}"
 
-            # Use Amazon Bedrock Converse API
             response = client.converse(
                 modelId=settings.bedrock_model_id,
                 system=[{"text": SYSTEM_PROMPT}],
@@ -128,7 +130,6 @@ def extract_subscription_from_email(email_content: str, email_subject: str = "")
             )
 
             output_text = response["output"]["message"]["content"][0]["text"].strip()
-            # Remove possible markdown fences if returned
             if output_text.startswith("```"):
                 output_text = re.sub(r"^```(?:json)?\s*", "", output_text)
                 output_text = re.sub(r"\s*```$", "", output_text)
@@ -138,7 +139,11 @@ def extract_subscription_from_email(email_content: str, email_subject: str = "")
             logger.info(f"Successfully extracted {extracted.service_name} via Bedrock.")
             return extracted.model_dump(mode="json")
         except Exception as exc:
-            logger.warning(f"Bedrock invocation failed ({exc}). Falling back to heuristic extractor.")
+            if not _bedrock_warning_logged:
+                logger.warning(
+                    f"Bedrock invocation failed ({exc}). Using heuristic fallback extractor."
+                )
+                _bedrock_warning_logged = True
 
     # Fallback path
     extracted = _heuristic_fallback_extractor(email_content, email_subject)

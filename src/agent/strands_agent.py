@@ -25,7 +25,6 @@ from src.tools.hitl_notifier import dispatch_hitl_decision
 logger = logging.getLogger(__name__)
 console = Console()
 
-# Tool Definitions for Bedrock Converse API Tool Config
 TOOL_SPECS = [
     {
         "toolSpec": {
@@ -174,14 +173,14 @@ class StrandsAgent:
         }
 
         # PHASE 1: SCAN & INGEST
-        console.print("\n[bold cyan]═══ PHASE 1: SCAN (Email Ingestion & Extraction) ═══[/bold cyan]")
+        console.print("\n[bold cyan]=== PHASE 1: SCAN (Email Ingestion & Extraction) ===[/bold cyan]")
         for email in emails:
             sub = self.process_email(email)
             results["ingested_count"] += 1
-            console.print(f"  [green]✔[/green] Ingested [bold]{sub.service_name}[/bold] (${sub.amount:.2f} {sub.currency}) renewing on {sub.renewal_date.strftime('%Y-%m-%d %H:%M UTC')}")
+            console.print(f"  [green][OK][/green] Ingested [bold]{sub.service_name}[/bold] (${sub.amount:.2f} {sub.currency}) renewing on {sub.renewal_date.strftime('%Y-%m-%d %H:%M UTC')}")
 
         # PHASE 2: DETECT IMMINENT DEADLINES
-        console.print(f"\n[bold cyan]═══ PHASE 2: DETECT (Threshold: {self.settings.deadline_threshold_hours}h) ═══[/bold cyan]")
+        console.print(f"\n[bold cyan]=== PHASE 2: DETECT (Threshold: {self.settings.deadline_threshold_hours}h) ===[/bold cyan]")
         imminent = self.db.get_imminent_subscriptions(
             threshold_hours=self.settings.deadline_threshold_hours,
             reference_time=ref_time,
@@ -196,22 +195,22 @@ class StrandsAgent:
             if sub_id is None:
                 continue
 
-            console.print(f"\n[bold magenta]⚡ Targeting Subscription #{sub_id}: {sub.service_name} (${sub.amount:.2f})[/bold magenta]")
+            console.print(f"\n[bold magenta]Targeting Subscription #{sub_id}: {sub.service_name} (${sub.amount:.2f})[/bold magenta]")
             console.print(f"  Deadline: {item.hours_remaining:.1f} hours remaining ({'CRITICAL' if item.is_critical else 'UPCOMING'})")
 
             # PHASE 3: STAGE CANCELLATION (Headless Browser)
-            console.print("[bold cyan]═══ PHASE 3: STAGE (Navigating Dark Pattern Maze) ═══[/bold cyan]")
+            console.print("[bold cyan]=== PHASE 3: STAGE (Navigating Dark Pattern Maze) ===[/bold cyan]")
             target_url = sub.cancellation_url or f"{self.settings.mock_portal_url}/billing"
             
             stage_result = stage_cancellation(target_url=target_url, subscription_id=sub_id, db_path=self.db.db_path)
             staged_screenshot = stage_result.get("staged_screenshot_path")
             results["staged_count"] += 1
-            console.print(f"  [green]✔[/green] Staged at final confirmation gate.")
+            console.print(f"  [green][STAGED][/green] Reached final confirmation gate.")
             if staged_screenshot:
                 console.print(f"  [dim]Pre-cancel proof: {staged_screenshot}[/dim]")
 
             # PHASE 4: HUMAN-IN-THE-LOOP APPROVAL GATE
-            console.print("[bold cyan]═══ PHASE 4: ASK (Human-in-the-Loop Gate) ═══[/bold cyan]")
+            console.print("[bold cyan]=== PHASE 4: ASK (Human-in-the-Loop Gate) ===[/bold cyan]")
             decision_dict = dispatch_hitl_decision(
                 subscription_id=sub_id,
                 service_name=sub.service_name,
@@ -228,7 +227,7 @@ class StrandsAgent:
 
             # PHASE 5: EXECUTE OR STAND DOWN
             if decision_type == HITLDecisionType.CANCEL.value:
-                console.print("[bold cyan]═══ PHASE 5a: EXECUTE (Guillotine Strike) ═══[/bold cyan]")
+                console.print("[bold cyan]=== PHASE 5a: EXECUTE (Guillotine Strike) ===[/bold cyan]")
                 commit_result = commit_cancellation(
                     target_url=stage_result.get("staged_page_url") or target_url,
                     subscription_id=sub_id,
@@ -243,11 +242,11 @@ class StrandsAgent:
                     "amount_saved": sub.amount,
                     "proof": commit_result.get("proof_screenshot_path"),
                 })
-                console.print(f"  [bold green]✅ CANCELLED! Saved ${sub.amount:.2f} {sub.currency}[/bold green]")
+                console.print(f"  [bold green][CANCELLED] Saved ${sub.amount:.2f} {sub.currency}[/bold green]")
                 if commit_result.get("proof_screenshot_path"):
                     console.print(f"  [dim]Proof screenshot saved: {commit_result.get('proof_screenshot_path')}[/dim]")
             else:
-                console.print("[bold cyan]═══ PHASE 5b: STAND DOWN (Retaining Subscription) ═══[/bold cyan]")
+                console.print("[bold cyan]=== PHASE 5b: STAND DOWN (Retaining Subscription) ===[/bold cyan]")
                 results["kept_count"] += 1
                 results["actions"].append({
                     "subscription_id": sub_id,
@@ -255,7 +254,7 @@ class StrandsAgent:
                     "action": "KEPT",
                     "amount_saved": 0.0,
                 })
-                console.print(f"  [yellow]🛑 Subscription preserved per operator request.[/yellow]")
+                console.print(f"  [yellow][KEPT] Subscription preserved per operator request.[/yellow]")
 
         # PRINT FINAL SUMMARY REPORT
         self.render_summary(results)
@@ -264,7 +263,7 @@ class StrandsAgent:
     def render_summary(self, results: Dict[str, Any]) -> None:
         """Render a polished Rich table summarizing pipeline execution."""
         console.print("\n")
-        table = Table(title="[bold green]📊 SUB GUILLOTINE EXECUTION REPORT[/bold green]", expand=False)
+        table = Table(title="[bold green]SUB GUILLOTINE EXECUTION REPORT[/bold green]", expand=False)
         table.add_column("Metric", style="bold cyan")
         table.add_column("Value", style="bold white")
 

@@ -8,22 +8,22 @@
 %% ============================================================
 
 graph TB
-    subgraph INPUT["📧 Email Ingestion Layer"]
+    subgraph INPUT[" Email Ingestion Layer"]
         EMAIL_MOCK["Mock Inbox<br/>(sample_emails.json)"]
         EMAIL_IMAP["IMAP / Gmail API<br/>(Future)"]
     end
 
-    subgraph BEDROCK["☁️ Amazon Bedrock"]
+    subgraph BEDROCK["️ Amazon Bedrock"]
         MODEL["Foundation Model<br/>Claude 3.5 Sonnet / Nova Pro"]
     end
 
-    subgraph AGENT_CORE["🤖 Strands Agent Core"]
+    subgraph AGENT_CORE[" Strands Agent Core"]
         AGENT["Strands Agent<br/>(Orchestrator)"]
         PROMPT["System Prompt<br/>(Safety Constraints)"]
         AGENT --- PROMPT
     end
 
-    subgraph TOOLBELT["🔧 Strands Tool Belt (@tool)"]
+    subgraph TOOLBELT[" Strands Tool Belt (@tool)"]
         T1["extract_subscription<br/>_from_email"]
         T2["check_imminent<br/>_deadlines"]
         T3["stage_cancellation"]
@@ -31,35 +31,35 @@ graph TB
         T5["commit_cancellation"]
     end
 
-    subgraph DATA["💾 Data Layer"]
+    subgraph DATA[" Data Layer"]
         SQLITE["SQLite Ledger<br/>(subscriptions table)"]
     end
 
-    subgraph BROWSER["🌐 Browser Automation"]
+    subgraph BROWSER[" Browser Automation"]
         PLAYWRIGHT["Playwright<br/>(Headless Chromium)"]
-        SCREENSHOTS["📸 Screenshot<br/>Capture Engine"]
+        SCREENSHOTS[" Screenshot<br/>Capture Engine"]
     end
 
-    subgraph MOCK_PORTAL["🎭 Mock SaaS Portal (FastAPI)"]
+    subgraph MOCK_PORTAL[" Mock SaaS Portal (FastAPI)"]
         LOGIN["/login"]
         DASHBOARD["/dashboard"]
         BILLING["/billing"]
         SURVEY["/cancel-survey"]
         RETENTION["50% Off Retention<br/>Dark Pattern"]
         FINAL["/final-cancel"]
-        SUCCESS["✅ Cancelled"]
+        SUCCESS[" Cancelled"]
 
         LOGIN --> DASHBOARD --> BILLING --> SURVEY --> RETENTION --> FINAL --> SUCCESS
     end
 
-    subgraph HITL["👤 Human-in-the-Loop Gate"]
-        CLI["💻 CLI Prompt<br/>(Rich Terminal)"]
-        TELEGRAM["📱 Telegram Bot<br/>(Inline Keyboard)"]
+    subgraph HITL[" Human-in-the-Loop Gate"]
+        CLI[" CLI Prompt<br/>(Rich Terminal)"]
+        TELEGRAM[" Telegram Bot<br/>(Inline Keyboard)"]
     end
 
-    subgraph OUTPUT["📊 Output"]
+    subgraph OUTPUT[" Output"]
         PROOF["Cancellation Proof<br/>(Timestamped PNG)"]
-        SAVINGS["💰 Money Saved<br/>Report"]
+        SAVINGS[" Money Saved<br/>Report"]
     end
 
     %% Connections
@@ -115,27 +115,27 @@ graph TB
 
 graph LR
     subgraph PHASE1["Phase 1: SCAN"]
-        A1["📧 Ingest Emails"] --> A2["🧠 Bedrock LLM<br/>Extract Fields"] --> A3["💾 Store in<br/>SQLite Ledger"]
+        A1[" Ingest Emails"] --> A2[" Bedrock LLM<br/>Extract Fields"] --> A3[" Store in<br/>SQLite Ledger"]
     end
 
     subgraph PHASE2["Phase 2: DETECT"]
-        B1["⏰ Check Deadlines<br/>(T-24h threshold)"] --> B2{"Imminent<br/>Renewals?"}
+        B1[" Check Deadlines<br/>(T-24h threshold)"] --> B2{"Imminent<br/>Renewals?"}
     end
 
     subgraph PHASE3["Phase 3: STAGE"]
-        C1["🌐 Launch<br/>Headless Browser"] --> C2["🚪 Login &<br/>Navigate"] --> C3["🛡️ Bypass<br/>Retention"] --> C4["📸 Screenshot<br/>Pre-Cancel State"]
+        C1[" Launch<br/>Headless Browser"] --> C2[" Login &<br/>Navigate"] --> C3["️ Bypass<br/>Retention"] --> C4[" Screenshot<br/>Pre-Cancel State"]
     end
 
     subgraph PHASE4["Phase 4: ASK"]
-        D1["📨 Send HITL<br/>Notification"] --> D2{"User<br/>Decision"}
+        D1[" Send HITL<br/>Notification"] --> D2{"User<br/>Decision"}
     end
 
     subgraph PHASE5A["Phase 5a: EXECUTE"]
-        E1["🖱️ Click Confirm"] --> E2["📸 Proof Screenshot"] --> E3["✅ Update Ledger<br/>→ CANCELLED"]
+        E1["️ Click Confirm"] --> E2[" Proof Screenshot"] --> E3[" Update Ledger<br/>→ CANCELLED"]
     end
 
     subgraph PHASE5B["Phase 5b: STAND DOWN"]
-        F1["📋 Update Ledger<br/>→ KEPT"]
+        F1[" Update Ledger<br/>→ KEPT"]
     end
 
     A3 --> B1
@@ -173,8 +173,8 @@ stateDiagram-v2
     STAGED_FOR_CANCEL --> CANCELLED: Human approved<br/>"CANCEL"
     STAGED_FOR_CANCEL --> KEPT: Human declined<br/>"KEEP"
 
-    CANCELLED --> [*]: Proof saved ✅
-    KEPT --> [*]: Standing down 🛑
+    CANCELLED --> [*]: Proof saved 
+    KEPT --> [*]: Standing down 
 
 
 %% ============================================================
@@ -239,20 +239,20 @@ graph TB
 %% ============================================================
 
 graph TD
-    START(("User/Agent<br/>Visits Portal")) --> LOGIN["🔐 Login Page<br/>POST /login"]
-    LOGIN --> DASH["📊 Dashboard<br/>GET /dashboard"]
-    DASH --> BILLING["💳 Billing Page<br/>GET /billing"]
-    BILLING --> SURVEY["📝 Cancel Survey<br/>'Why are you leaving?'"]
-    SURVEY --> RETENTION["🎁 Retention Offer<br/>'Stay for 50% off!'<br/>Dark Pattern #1"]
-    RETENTION --> COUNTDOWN["⏳ Fake Loading<br/>'Processing...'<br/>Dark Pattern #2"]
-    COUNTDOWN --> FINAL["⚠️ Final Confirm<br/>'Are you REALLY sure?'<br/>Dark Pattern #3"]
+    START(("User/Agent<br/>Visits Portal")) --> LOGIN[" Login Page<br/>POST /login"]
+    LOGIN --> DASH[" Dashboard<br/>GET /dashboard"]
+    DASH --> BILLING[" Billing Page<br/>GET /billing"]
+    BILLING --> SURVEY[" Cancel Survey<br/>'Why are you leaving?'"]
+    SURVEY --> RETENTION[" Retention Offer<br/>'Stay for 50% off!'<br/>Dark Pattern #1"]
+    RETENTION --> COUNTDOWN[" Fake Loading<br/>'Processing...'<br/>Dark Pattern #2"]
+    COUNTDOWN --> FINAL["️ Final Confirm<br/>'Are you REALLY sure?'<br/>Dark Pattern #3"]
 
-    FINAL --> |"Agent STAGES here<br/>📸 Screenshot"| STAGED(("⏸️ STAGED<br/>Awaiting Human"))
+    FINAL --> |"Agent STAGES here<br/> Screenshot"| STAGED(("️ STAGED<br/>Awaiting Human"))
 
-    STAGED --> |"Human: CANCEL"| CONFIRM["✅ Confirm Click<br/>POST /final-cancel"]
-    STAGED --> |"Human: KEEP"| ABORT["🛑 Abort<br/>No action taken"]
+    STAGED --> |"Human: CANCEL"| CONFIRM[" Confirm Click<br/>POST /final-cancel"]
+    STAGED --> |"Human: KEEP"| ABORT[" Abort<br/>No action taken"]
 
-    CONFIRM --> SUCCESS["🎉 Success Page<br/>'Subscription Cancelled'<br/>📸 Proof Screenshot"]
+    CONFIRM --> SUCCESS[" Success Page<br/>'Subscription Cancelled'<br/> Proof Screenshot"]
 
     classDef dark fill:#D63031,stroke:#C0392B,color:white,font-weight:bold
     classDef safe fill:#00B894,stroke:#008C6E,color:white,font-weight:bold

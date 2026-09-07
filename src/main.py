@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 
 from src.agent.strands_agent import StrandsAgent
@@ -25,18 +24,15 @@ logging.basicConfig(level=logging.WARNING)
 
 def print_banner():
     """Print Sub Guillotine ASCII header banner."""
-    banner = """[bold red]
- ▄████████ ███    █▄  ▀█████████▄          ▄██████▄  ███    █▄  ▄█  ███       ███             
-███    ███ ███    ███   ███    ███        ███    ███ ███    ███ ███  ███       ███             
-███    █▀  ███    ███   ███    ███        ███    █▀  ███    ███ ███▄▄███▄▄   ▄▄███▄▄   ▄███████ 
-███        ███    ███  ▄███▄▄▄██▀        ▄███        ███    ███ ▀▀▀███▀▀▀    ▀▀███▀▀    ███▄▄▄▄  
-▀███████████ ███    ███ ▀▀███▀▀▀██▄       ▀███ ████▄  ███    ███   ▄███▄▄▄     ▄███▄▄▄    ███▀▀▀▀  
-       ███ ███    ███   ███    ██▄        ███    ███ ███    ███  ▀▀███▀▀▀    ▀▀███▀▀    ███▄▄▄▄  
- ▄█    ███ ███    ███   ███    ███        ███    ███ ███    ███    ███       ███        ███    ███ 
-▄████████▀ ▀████████▀ ▄█████████▀          ▀██████▀  ▀████████▀    ███       ███        █████████ 
+    banner = r"""[bold red]
+  ____  _   _ ____     ____ _   _ ___ _     _     ___ _____ ___ _   _ _____ 
+ / ___|| | | | __ )   / ___| | | |_ _| |   | |   / _ \_   _|_ _| \ | | ____|
+ \___ \| | | |  _ \  | |  _| |_| || || |   | |  | | | || |  | ||  \| |  _|  
+  ___) | |_| | |_) | | |_| | |_| || || |___| |__| |_| || |  | || |\  | |___ 
+ |____/ \___/|____/   \____|\___/|___|_____|_____\___/ |_| |___|_| \_|_____|
 [/bold red]
-[bold white]⚔️  AUTONOMOUS FINANCIAL DEFENSE AGENT — HUNTING RECURRING SUBSCRIPTIONS ⚔️[/bold white]
-[dim]Powered by Amazon Bedrock (Claude 3.5 Sonnet / Nova Pro) & Playwright Automation[/dim]
+[bold white]AUTONOMOUS FINANCIAL DEFENSE AGENT -- HUNTING RECURRING SUBSCRIPTIONS[/bold white]
+[dim]Powered by Amazon Bedrock & Playwright Automation[/dim]
 """
     console.print(banner)
 
@@ -47,7 +43,7 @@ def show_ledger_status(db_path: str = None):
     subs = db.get_all_subscriptions()
     total_saved = db.get_total_savings()
 
-    table = Table(title="[bold green]📋 CURRENT SUBSCRIPTION LEDGER[/bold green]", expand=True)
+    table = Table(title="[bold green]CURRENT SUBSCRIPTION LEDGER[/bold green]", expand=True)
     table.add_column("ID", justify="center", style="bold cyan", width=4)
     table.add_column("Service Name", style="bold white")
     table.add_column("Amount", justify="right", style="bold yellow")
@@ -65,11 +61,11 @@ def show_ledger_status(db_path: str = None):
         )
 
     console.print(table)
-    console.print(f"\n[bold green]💰 Total Money Saved to Date: ${total_saved:.2f} USD[/bold green]\n")
+    console.print(f"\n[bold green]Total Money Saved to Date: ${total_saved:.2f} USD[/bold green]\n")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Sub Guillotine — Autonomous Subscription Defense Agent")
+    parser = argparse.ArgumentParser(description="Sub Guillotine -- Autonomous Subscription Defense Agent")
     parser.add_argument("--demo", action="store_true", help="Run automated end-to-end demo flow")
     parser.add_argument("--auto-cancel", action="store_true", help="Auto-approve cancellations without interactive prompt")
     parser.add_argument("--status", action="store_true", help="Show current subscriptions ledger and savings")

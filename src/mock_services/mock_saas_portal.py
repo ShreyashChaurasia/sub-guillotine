@@ -7,13 +7,12 @@ import uvicorn
 
 app = FastAPI(title="SaaSPro Mock Customer Portal")
 
-# Basic styling template
 PAGE_LAYOUT = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} — SaaSPro Analytics</title>
+    <title>{title} -- SaaSPro Analytics</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -100,7 +99,7 @@ PAGE_LAYOUT = """<!DOCTYPE html>
 @app.get("/login", response_class=HTMLResponse)
 async def login_page():
     content = """
-    <h2>🔐 SaaSPro Portal Login</h2>
+    <h2>SaaSPro Portal Login</h2>
     <p style="color: #94a3b8; font-size: 14px;">Sign in to manage your team analytics subscription.</p>
     <form action="/login" method="POST">
         <div class="input-group">
@@ -109,7 +108,7 @@ async def login_page():
         </div>
         <div class="input-group">
             <label>Password</label>
-            <input type="password" name="password" value="••••••••••••" required />
+            <input type="password" name="password" value="password123" required />
         </div>
         <button id="login-btn" type="submit" class="btn btn-primary">Sign In to Account</button>
     </form>
@@ -127,13 +126,13 @@ async def process_login(response: Response, email: str = Form("alex.chen@example
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page():
     content = """
-    <h2>📊 Account Dashboard</h2>
+    <h2>Account Dashboard</h2>
     <p>Welcome back, <strong>Alex Chen</strong> <span class="badge">Active</span></p>
     <div style="background: #0f172a; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #334155;">
         <p style="margin: 4px 0;"><strong>Current Plan:</strong> Pro Tier ($29.00 / month)</p>
         <p style="margin: 4px 0; color: #f59e0b;"><strong>Next Billing Date:</strong> August 24, 2026</p>
     </div>
-    <a id="billing-link" href="/billing" class="btn btn-primary">💳 Manage Billing & Subscription</a>
+    <a id="billing-link" href="/billing" class="btn btn-primary">Manage Billing & Subscription</a>
     """
     return HTMLResponse(PAGE_LAYOUT.format(title="Dashboard", content=content))
 
@@ -141,7 +140,7 @@ async def dashboard_page():
 @app.get("/billing", response_class=HTMLResponse)
 async def billing_page():
     content = """
-    <h2>💳 Billing & Subscription</h2>
+    <h2>Billing & Subscription</h2>
     <div style="background: #0f172a; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #334155;">
         <p style="margin: 4px 0;"><strong>Active Subscription:</strong> SaaSPro Pro Tier</p>
         <p style="margin: 4px 0;"><strong>Renewal Cost:</strong> $29.00 USD / month</p>
@@ -157,8 +156,8 @@ async def billing_page():
 @app.get("/cancel-survey", response_class=HTMLResponse)
 async def cancel_survey_page():
     content = """
-    <h2>📝 Cancellation Survey (Dark Pattern #1)</h2>
-    <p style="color: #94a3b8; font-size: 14px;">We're sorry to see you go. Please tell us why you are leaving before we proceed.</p>
+    <h2>Cancellation Survey (Dark Pattern #1)</h2>
+    <p style="color: #94a3b8; font-size: 14px;">We are sorry to see you go. Please tell us why you are leaving before we proceed.</p>
     <form action="/retention-offer" method="GET" id="survey-form">
         <div class="input-group">
             <label>Primary reason for leaving</label>
@@ -179,7 +178,7 @@ async def cancel_survey_page():
 @app.get("/retention-offer", response_class=HTMLResponse)
 async def retention_offer_page():
     content = """
-    <h2>🎁 Wait! Special Offer for You (Dark Pattern #2)</h2>
+    <h2>Special Offer for You (Dark Pattern #2)</h2>
     <div class="offer-box">
         <h3 style="color: #34d399; margin-bottom: 8px;">Get 50% Off For the Next 6 Months!</h3>
         <p style="margin: 4px 0; font-size: 15px;">Stay on Pro Tier for just <strong>$14.50/month</strong> instead of $29.00.</p>
@@ -193,7 +192,7 @@ async def retention_offer_page():
 @app.get("/final-cancel", response_class=HTMLResponse)
 async def final_cancel_page():
     content = """
-    <h2>⚠️ Final Confirmation Gate</h2>
+    <h2>Final Confirmation Gate</h2>
     <div style="background: #450a0a; border: 1px solid #ef4444; padding: 16px; border-radius: 8px; margin: 16px 0;">
         <p style="color: #fca5a5; margin: 0; font-weight: 600;">Warning: You will lose access to all analytics data, dashboards, and export features at the end of the billing cycle.</p>
     </div>
@@ -209,7 +208,7 @@ async def final_cancel_page():
 async def process_final_cancel():
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     content = f"""
-    <h2>✅ Subscription Successfully Cancelled</h2>
+    <h2>Subscription Successfully Cancelled</h2>
     <div class="proof-box">
         <h3 style="color: #34d399; margin: 0 0 8px 0;">Cancellation Confirmed</h3>
         <p style="margin: 4px 0;">Your SaaSPro Pro Tier subscription has been terminated.</p>

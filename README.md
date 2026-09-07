@@ -1,4 +1,4 @@
-# Sub Guillotine — Autonomous Financial Defense Agent
+# Sub Guillotine -- Autonomous Financial Defense Agent
 
 > **"Hunt recurring SaaS subscriptions, navigate dark-pattern cancellation mazes, and save money with Agent-in-the-Loop safety."**
 
@@ -8,7 +8,7 @@
 
 Every year, consumers and businesses lose billions of dollars to **unwanted recurring subscriptions**, **forgotten free trials**, and **deliberately weaponized cancellation dark patterns** (multi-step exit surveys, hidden billing buttons, fake loading spinners, and manipulative retention discount traps).
 
-**Sub Guillotine** is an autonomous AI agent powered by **Amazon Bedrock (Claude 3.5 Sonnet / Nova Pro)** and **Playwright browser automation**. It audits incoming email billing notices, tracks imminent renewal deadlines, autonomously navigates dark pattern cancellation flows up to the final gate, and presents visual proof to the user for one-click authorization.
+**Sub Guillotine** is an autonomous AI agent powered by **Amazon Bedrock** and **Playwright browser automation**. It audits incoming email billing notices, tracks imminent renewal deadlines, autonomously navigates dark pattern cancellation flows up to the final gate, and presents visual proof to the user for one-click authorization.
 
 ---
 
@@ -21,7 +21,7 @@ graph TB
     end
 
     subgraph BEDROCK["Amazon Bedrock"]
-        MODEL["Claude 3.5 Sonnet / Nova Pro<br/>(Converse API)"]
+        MODEL["Foundation Model<br/>(Converse API)"]
     end
 
     subgraph AGENT_CORE["Strands Agent Core"]
@@ -76,7 +76,7 @@ graph TB
 1. **Phase 1: SCAN (Email Ingestion & LLM Parsing)**
    - Ingests raw emails (HTML/Plaintext) and uses Amazon Bedrock to extract structured metadata (`service_name`, `amount`, `currency`, `billing_cycle`, `renewal_date`, `cancellation_url`).
 2. **Phase 2: DETECT (Deadline Auditing)**
-   - Audits the SQLite ledger and detects upcoming renewals within the user's warning threshold (e.g. $T \le 24$ hours).
+   - Audits the SQLite ledger and detects upcoming renewals within the user's warning threshold (e.g. within 24 hours).
 3. **Phase 3: STAGE (Dark Pattern Navigation)**
    - Launches headless Chromium via Playwright, navigates through login forms, billing screens, cancellation surveys, and discount popups, halting safely right before the destructive confirmation click.
    - Captures a **pre-cancellation screenshot**.
@@ -105,7 +105,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # Install Playwright browser
-playwright install chromium
+playwright install
 ```
 
 ### 2. Configure AWS & Environment
@@ -118,7 +118,7 @@ Edit `.env`:
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_DEFAULT_REGION=us-east-1
-BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
+BEDROCK_MODEL_ID=amazon.nova-pro-v1:0
 ```
 
 ---
