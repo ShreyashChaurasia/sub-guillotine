@@ -280,6 +280,26 @@ def test_main_cli_helpers(temp_db: Database):
     show_ledger_status(temp_db.db_path)
 
 
+def test_main_cli_daemon_mode(monkeypatch):
+    """Verify main.py daemon mode execution and graceful exit."""
+    from src.main import main
+    monkeypatch.setattr("sys.argv", [
+        "src.main",
+        "--daemon",
+        "--interval", "1",
+        "--max-iterations", "1",
+        "--auto-cancel",
+        "--emails", "src/mock_services/sample_emails.json",
+    ])
+    mock_proc = MagicMock()
+    mock_proc.is_alive.return_value = False
+    with patch("multiprocessing.Process", return_value=mock_proc), \
+         patch("src.main.StrandsAgent.run_guillotine_pipeline") as mock_pipeline:
+        mock_pipeline.return_value = {}
+        main()
+        assert mock_pipeline.called
+
+
 def test_stage_cancellation_invalid_url(temp_db: Database):
     """Test stage_cancellation returns graceful failure on invalid URL."""
     sub = temp_db.add_subscription(

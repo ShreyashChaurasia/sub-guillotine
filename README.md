@@ -138,6 +138,14 @@ Runs the complete 5-phase pipeline against sample emails and the mock SaaS porta
 python -m src.main --demo
 ```
 
+### Autonomous Background Daemon Mode
+
+Runs continuously in the background, waking up periodically to monitor billing deadlines and pushing mobile approval alerts when actions are required:
+
+```bash
+python -m src.main --daemon --interval 3600
+```
+
 ### Interactive Mode (Prompt for Human Authorization)
 
 ```bash
@@ -157,6 +165,17 @@ python -m src.main --start-portal
 ```
 
 *Visit `http://localhost:8888` in your browser to experience the dark-pattern cancellation flow.*
+
+---
+
+## Deployment & AgentCore
+
+Sub Guillotine is architected for both local background operation and cloud serverless deployment via **AgentCore** and Docker containers:
+
+* **AgentCore Manifest**: [`agentcore.json`](agentcore.json) defines the agent metadata, tool schemas, container entrypoint, and safety guardrails.
+* **Containerization**: [`Dockerfile`](Dockerfile) bundles Python 3.11 with Playwright headless Chromium dependencies.
+* **Docker Compose**: Launch local containerized execution via `docker compose up -d`.
+* **Full Deployment Guide**: See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for AWS ECS, AWS App Runner, and AgentCore deployment procedures.
 
 ---
 

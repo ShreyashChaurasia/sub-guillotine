@@ -92,8 +92,5 @@ playwright-state/
 # Keep .env.example tracked (override *.env rule)
 !.env.example
 
-# Developer Docs
-docs/
-
 # Local agent instructions
 GEMINI.md

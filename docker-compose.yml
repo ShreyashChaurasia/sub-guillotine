@@ -1,0 +1,23 @@
+services:
+  sub-guillotine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sub-guillotine-daemon
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - BEDROCK_MODEL_ID=${BEDROCK_MODEL_ID:-amazon.nova-lite-v1:0}
+      - DATABASE_PATH=/data/sub_guillotine.db
+      - SCREENSHOTS_DIR=/app/screenshots
+      - DEADLINE_THRESHOLD_HOURS=24
+      - HEADLESS_BROWSER=true
+      - HITL_MODE=${HITL_MODE:-cli}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    volumes:
+      - ./screenshots:/app/screenshots
+      - ./data:/data
+    restart: unless-stopped
+    command: ["python", "-m", "src.main", "--daemon", "--interval", "3600"]

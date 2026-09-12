@@ -71,6 +71,10 @@ def main():
     parser.add_argument("--status", action="store_true", help="Show current subscriptions ledger and savings")
     parser.add_argument("--start-portal", action="store_true", help="Start the mock SaaS portal standalone")
     parser.add_argument("--emails", type=str, default="src/mock_services/sample_emails.json", help="Path to sample emails JSON")
+    parser.add_argument("--daemon", action="store_true", help="Run continuously in background daemon worker mode")
+    parser.add_argument("--interval", type=int, default=3600, help="Polling interval in seconds for daemon mode (default: 3600)")
+    parser.add_argument("--max-iterations", type=int, default=None, help="Maximum daemon iterations before exiting (useful for testing)")
+    parser.add_argument("--live-time", action="store_true", help="Use current real-world UTC time instead of mock reference timestamp")
 
     args = parser.parse_args()
     print_banner()
@@ -107,20 +111,57 @@ def main():
 
         agent = StrandsAgent()
         
-        # Simulated current time (August 23, 2026 at 12:00 UTC)
-        simulated_time = datetime(2026, 8, 23, 12, 0, 0, tzinfo=timezone.utc)
-
+        # Determine reference time
+        ref_time = datetime.now(timezone.utc) if args.live_time else datetime(2026, 8, 23, 12, 0, 0, tzinfo=timezone.utc)
         auto_decision = "CANCEL" if args.auto_cancel else (None if not args.demo else "CANCEL")
-        interactive = not args.auto_cancel and not args.demo
+        interactive = not args.auto_cancel and not args.demo and not args.daemon
 
-        agent.run_guillotine_pipeline(
-            emails=sample_emails,
-            reference_time=simulated_time,
-            auto_decision=auto_decision,
-            interactive=interactive,
-        )
+        if args.daemon:
+            console.print(f"[bold cyan]Sub Guillotine Background Daemon Activated[/bold cyan]")
+            console.print(f"  Polling interval: [bold yellow]{args.interval}s[/bold yellow]")
+            console.print(f"  Autonomous mode: [bold green]Active[/bold green] (HITL via Telegram / Non-blocking)")
+            console.print("  [dim]Press Ctrl+C to terminate background worker.[/dim]\n")
 
-        show_ledger_status()
+            iteration = 0
+            while True:
+                iteration += 1
+                cycle_time = datetime.now(timezone.utc) if args.live_time else ref_time
+                console.print(f"[bold blue]=== DAEMON CYCLE #{iteration} at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')} ===[/bold blue]")
+
+                try:
+                    agent.run_guillotine_pipeline(
+                        emails=sample_emails,
+                        reference_time=cycle_time,
+                        auto_decision=auto_decision,
+                        interactive=interactive,
+                    )
+                except Exception as loop_err:
+                    console.print(f"[bold red]Error during daemon execution cycle: {loop_err}[/bold red]")
+
+                show_ledger_status()
+
+                if args.max_iterations and iteration >= args.max_iterations:
+                    console.print(f"[bold green]Reached maximum configured iterations ({args.max_iterations}). Exiting daemon.[/bold green]")
+                    break
+
+                console.print(f"[dim]Background agent sleeping for {args.interval} seconds...[/dim]\n")
+                try:
+                    time.sleep(args.interval)
+                except KeyboardInterrupt:
+                    console.print("\n[bold yellow]Termination signal received. Standing down daemon.[/bold yellow]")
+                    break
+
+        else:
+            agent.run_guillotine_pipeline(
+                emails=sample_emails,
+                reference_time=ref_time,
+                auto_decision=auto_decision,
+                interactive=interactive,
+            )
+            show_ledger_status()
+
+    except KeyboardInterrupt:
+        console.print("\n[bold yellow]Operation cancelled by user.[/bold yellow]")
 
     finally:
         if server_process.is_alive():

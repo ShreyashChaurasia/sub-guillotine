@@ -1,0 +1,99 @@
+{
+  "$schema": "https://strands-agents.aws/schemas/agentcore-v1.json",
+  "name": "sub-guillotine",
+  "version": "1.0.0",
+  "track": "Everyday Agents",
+  "description": "Autonomous financial defense agent that hunts recurring subscriptions, bypasses deceptive dark patterns via Playwright, and enforces human-in-the-loop approval before executing cancellations.",
+  "runtime": {
+    "type": "container",
+    "image": "sub-guillotine:latest",
+    "entrypoint": ["python", "-m", "src.main"],
+    "args": ["--daemon", "--interval", "3600"],
+    "environment": {
+      "HEADLESS_BROWSER": "true",
+      "DEADLINE_THRESHOLD_HOURS": "24",
+      "HITL_MODE": "telegram"
+    }
+  },
+  "model": {
+    "provider": "bedrock",
+    "defaultModelId": "amazon.nova-lite-v1:0",
+    "fallbackStrategy": "heuristic_regex"
+  },
+  "guardrails": {
+    "financialSafety": {
+      "requireHumanAuthorization": true,
+      "auditScreenshots": true,
+      "disallowedAutonomousActions": [
+        "payment_mutation",
+        "unauthorized_cancellation",
+        "plan_upgrade"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "extract_subscription_from_email",
+      "description": "Extracts structured subscription details from raw email text or HTML via Amazon Bedrock Converse API.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "email_content": { "type": "string" },
+          "email_subject": { "type": "string" }
+        },
+        "required": ["email_content"]
+      }
+    },
+    {
+      "name": "check_imminent_deadlines",
+      "description": "Scans the SQLite ledger for subscriptions renewing within the configurable threshold (default 24h).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "threshold_hours": { "type": "integer", "default": 24 },
+          "reference_time_iso": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "stage_cancellation",
+      "description": "Navigates headless Playwright Chromium through multi-step dark pattern funnels up to final confirmation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_url": { "type": "string" },
+          "subscription_id": { "type": "integer" }
+        },
+        "required": ["target_url", "subscription_id"]
+      }
+    },
+    {
+      "name": "dispatch_hitl_decision",
+      "description": "Enforces human approval gate via Rich terminal prompt or Telegram bot push notification with visual screenshot proof.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "subscription_id": { "type": "integer" },
+          "service_name": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "hours_remaining": { "type": "number" },
+          "staged_screenshot_path": { "type": "string" }
+        },
+        "required": ["subscription_id", "service_name", "amount"]
+      }
+    },
+    {
+      "name": "commit_cancellation",
+      "description": "Clicks final confirm cancellation in browser, captures receipt screenshot, and archives savings in SQLite ledger.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_url": { "type": "string" },
+          "subscription_id": { "type": "integer" }
+        },
+        "required": ["target_url", "subscription_id"]
+      }
+    }
+  ]
+}
