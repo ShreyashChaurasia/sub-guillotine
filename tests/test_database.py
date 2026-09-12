@@ -215,3 +215,74 @@ def test_delete_subscription(temp_db: Database):
     assert temp_db.delete_subscription(item.id) is True  # type: ignore
     assert temp_db.get_subscription(item.id) is None  # type: ignore
     assert temp_db.delete_subscription(item.id) is False  # type: ignore
+
+
+def test_upsert_updates_existing_subscription(temp_db: Database):
+    """Test that adding a subscription with the same service name updates the record rather than creating a duplicate."""
+    now = datetime.now(timezone.utc)
+    sub1 = SubscriptionItem(
+        service_name="CloudStorage Inc",
+        amount=10.00,
+        renewal_date=now + timedelta(days=5),
+        cancellation_url="http://example.com/cancel1",
+    )
+    first_saved = temp_db.add_subscription(sub1)
+    assert first_saved is not None
+    assert first_saved.id is not None
+
+    # Add same service name with updated amount and url
+    sub2 = SubscriptionItem(
+        service_name="CloudStorage Inc",
+        amount=12.50,
+        renewal_date=now + timedelta(days=30),
+        cancellation_url="http://example.com/cancel2",
+    )
+    second_saved = temp_db.add_subscription(sub2)
+    assert second_saved is not None
+    assert second_saved.id == first_saved.id
+    assert second_saved.amount == 12.50
+    assert second_saved.cancellation_url == "http://example.com/cancel2"
+
+    # Ledger should still only have 1 row
+    all_subs = temp_db.get_all_subscriptions()
+    assert len(all_subs) == 1
+
+
+def test_upsert_preserves_cancelled_status(temp_db: Database):
+    """Test that incoming emails for an already CANCELLED subscription do not revert it to MONITORING."""
+    now = datetime.now(timezone.utc)
+    sub = SubscriptionItem(
+        service_name="SaaSPro Tool",
+        amount=29.00,
+        renewal_date=now + timedelta(days=1),
+    )
+    saved = temp_db.add_subscription(sub)
+    temp_db.update_status(saved.id, SubscriptionStatus.CANCELLED)  # type: ignore
+
+    # Simulate re-running with the same email
+    re_added = temp_db.add_subscription(sub)
+    assert re_added.id == saved.id
+    assert re_added.status == SubscriptionStatus.CANCELLED
+
+    # Check that savings are maintained
+    assert temp_db.get_total_savings() == 29.00
+
+
+def test_get_subscription_by_service_case_insensitive(temp_db: Database):
+    """Test querying subscription by service name with case-insensitivity."""
+    now = datetime.now(timezone.utc)
+    sub = SubscriptionItem(
+        service_name="Netflix Standard",
+        amount=15.49,
+        renewal_date=now + timedelta(days=10),
+    )
+    saved = temp_db.add_subscription(sub)
+
+    found = temp_db.get_subscription_by_service("netflix standard")
+    assert found is not None
+    assert found.id == saved.id
+    assert found.service_name == "Netflix Standard"
+
+    found_upper = temp_db.get_subscription_by_service("  NETFLIX STANDARD  ")
+    assert found_upper is not None
+    assert found_upper.id == saved.id

@@ -92,6 +92,7 @@ graph TB
 ## Quick Start & Installation
 
 ### 1. Clone & Setup Environment
+
 ```bash
 # Clone the repository
 git clone https://github.com/ShreyashChaurasia/sub-guillotine.git
@@ -109,11 +110,15 @@ playwright install
 ```
 
 ### 2. Configure AWS & Environment
+
 Copy `.env.example` to `.env` and configure your Amazon Bedrock credentials:
+
 ```bash
 cp .env.example .env
 ```
+
 Edit `.env`:
+
 ```env
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
@@ -126,25 +131,31 @@ BEDROCK_MODEL_ID=amazon.nova-pro-v1:0
 ## Running the Application
 
 ### Automated End-to-End Demo
+
 Runs the complete 5-phase pipeline against sample emails and the mock SaaS portal:
+
 ```bash
 python -m src.main --demo
 ```
 
 ### Interactive Mode (Prompt for Human Authorization)
+
 ```bash
 python -m src.main
 ```
 
 ### Check Subscription Ledger & Total Savings
+
 ```bash
 python -m src.main --status
 ```
 
 ### Start Mock SaaS Portal Standalone (Port 8888)
+
 ```bash
 python -m src.main --start-portal
 ```
+
 *Visit `http://localhost:8888` in your browser to experience the dark-pattern cancellation flow.*
 
 ---
@@ -152,6 +163,7 @@ python -m src.main --start-portal
 ## Testing
 
 Run the comprehensive unit and end-to-end integration test suite:
+
 ```bash
 pytest tests/ -v
 ```
@@ -161,6 +173,7 @@ pytest tests/ -v
 ## Financial Safety & Ethics
 
 Sub Guillotine is built from the ground up with **Agent-in-the-Loop (AIL) guardrails**:
+
 - **Zero Autonomous Financial Mutation:** The agent is architecturally blocked from clicking final cancellation buttons without explicit operator input.
 - **Auditable Visual Trail:** Every staging and execution step generates timestamped screenshots in `screenshots/`.
 - **Local Ledger:** All subscription tracking and state history resides in a local SQLite database (`sub_guillotine.db`).
@@ -168,4 +181,5 @@ Sub Guillotine is built from the ground up with **Agent-in-the-Loop (AIL) guardr
 ---
 
 ## License
+
 This project is licensed under the [MIT License](LICENSE).

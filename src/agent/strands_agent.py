@@ -177,7 +177,10 @@ class StrandsAgent:
         for email in emails:
             sub = self.process_email(email)
             results["ingested_count"] += 1
-            console.print(f"  [green][OK][/green] Ingested [bold]{sub.service_name}[/bold] (${sub.amount:.2f} {sub.currency}) renewing on {sub.renewal_date.strftime('%Y-%m-%d %H:%M UTC')}")
+            if sub.status == SubscriptionStatus.CANCELLED:
+                console.print(f"  [dim yellow][ALREADY CANCELLED][/dim yellow] [bold]{sub.service_name}[/bold] (${sub.amount:.2f} {sub.currency}) - Preserving cancelled status")
+            else:
+                console.print(f"  [green][OK][/green] Ingested [bold]{sub.service_name}[/bold] (${sub.amount:.2f} {sub.currency}) renewing on {sub.renewal_date.strftime('%Y-%m-%d %H:%M UTC')}")
 
         # PHASE 2: DETECT IMMINENT DEADLINES
         console.print(f"\n[bold cyan]=== PHASE 2: DETECT (Threshold: {self.settings.deadline_threshold_hours}h) ===[/bold cyan]")

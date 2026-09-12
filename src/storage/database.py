@@ -75,13 +75,119 @@ class Database:
                 ON subscriptions(renewal_date);
                 """
             )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_subscriptions_service
+                ON subscriptions(service_name);
+                """
+            )
             conn.commit()
 
+        # Deduplicate any existing duplicate entries from prior runs
+        self.deduplicate_ledger()
+
+    def deduplicate_ledger(self) -> int:
+        """Remove duplicate subscription records per service_name, preserving CANCELLED state and latest entries."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                DELETE FROM subscriptions
+                WHERE id NOT IN (
+                    SELECT id FROM (
+                        SELECT id, ROW_NUMBER() OVER (
+                            PARTITION BY LOWER(TRIM(service_name))
+                            ORDER BY CASE WHEN status = 'CANCELLED' THEN 0 ELSE 1 END, id DESC
+                        ) as rn
+                        FROM subscriptions
+                    ) WHERE rn = 1
+                );
+                """
+            )
+            deleted_count = cursor.rowcount
+            conn.commit()
+            return deleted_count
+
+    def get_subscription_by_service(
+        self, service_name: str, plan_name: Optional[str] = None
+    ) -> Optional[SubscriptionItem]:
+        """Fetch an existing subscription by service name (case-insensitive)."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            if plan_name:
+                cursor.execute(
+                    """
+                    SELECT * FROM subscriptions
+                    WHERE LOWER(TRIM(service_name)) = LOWER(TRIM(?))
+                      AND LOWER(TRIM(COALESCE(plan_name, ''))) = LOWER(TRIM(?))
+                    ORDER BY CASE WHEN status = 'CANCELLED' THEN 0 ELSE 1 END, id DESC
+                    LIMIT 1;
+                    """,
+                    (service_name, plan_name),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT * FROM subscriptions
+                    WHERE LOWER(TRIM(service_name)) = LOWER(TRIM(?))
+                    ORDER BY CASE WHEN status = 'CANCELLED' THEN 0 ELSE 1 END, id DESC
+                    LIMIT 1;
+                    """,
+                    (service_name,),
+                )
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return self._row_to_model(row)
+
     def add_subscription(self, sub: SubscriptionItem) -> SubscriptionItem:
-        """Insert a new subscription into the ledger."""
+        """
+        Insert or update (upsert) a subscription in the ledger to prevent duplicate records.
+        If an entry for this service already exists:
+        - If CANCELLED, preserve CANCELLED status.
+        - If active (MONITORING/STAGED/KEPT), update renewal date, amount, and links.
+        """
+        existing = self.get_subscription_by_service(sub.service_name, sub.plan_name)
         now_str = datetime.now(timezone.utc).isoformat()
         renewal_iso = sub.renewal_date.isoformat()
 
+        if existing and existing.id is not None:
+            # If already cancelled, preserve CANCELLED status
+            if existing.status == SubscriptionStatus.CANCELLED:
+                return existing
+
+            # Otherwise update existing subscription with latest details
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    UPDATE subscriptions SET
+                        plan_name = COALESCE(?, plan_name),
+                        amount = ?,
+                        currency = ?,
+                        billing_cycle = ?,
+                        renewal_date = ?,
+                        cancellation_url = COALESCE(?, cancellation_url),
+                        login_url = COALESCE(?, login_url),
+                        updated_at = ?
+                    WHERE id = ?;
+                    """,
+                    (
+                        sub.plan_name,
+                        sub.amount,
+                        sub.currency,
+                        sub.billing_cycle,
+                        renewal_iso,
+                        sub.cancellation_url,
+                        sub.login_url,
+                        now_str,
+                        existing.id,
+                    ),
+                )
+                conn.commit()
+            return self.get_subscription(existing.id)  # type: ignore
+
+        # New subscription entry
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
